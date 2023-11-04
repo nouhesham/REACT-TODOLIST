@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Getaxios } from "../config/axios.config";
 
 const Todolist = () => {
+  const authToken = "234455kalsk";
+  localStorage.setItem("token", authToken);
   const getTodolist = (search) => {
     return Getaxios.get("/todos", { params: { q: search } }).then((data) =>
       setTodos(data.data)
@@ -12,14 +14,29 @@ const Todolist = () => {
   const [search, setSearchTerm] = useState("");
   const [editingTask, setEditingTask] = useState(null);
   const [editedTaskContent, setEditedTaskContent] = useState("");
-
+  //adding taskname
   const handleChange = (e) => {
     setTaskName(e.target.value);
   };
-  const searchsubmit = (e) => {
-    setSearchTerm(e.target.value);
-    getTodos();
+
+  //search function with delay
+  const debounceDelay = 1000;
+  let debounceTimer;
+  const handleDebouncedSearch = (searchTerm) => {
+    // Clear the previous timer to prevent immediate requests
+    clearTimeout(debounceTimer);
+
+    // Set a new timer to delay the request
+    debounceTimer = setTimeout(() => {
+      getTodos(searchTerm);
+    }, debounceDelay);
   };
+  const searchsubmit = (e) => {
+    const searchterm = e.target.value;
+    setSearchTerm(searchterm);
+    handleDebouncedSearch(searchterm);
+  };
+  //gettodos function
   const getTodos = async (search) => {
     try {
       await getTodolist(search);
@@ -27,7 +44,7 @@ const Todolist = () => {
       console.log("error");
     }
   };
-
+  //deleting the item
   const handleDelete = (id) => {
     Getaxios.delete(`todos/${id}`).then((data) => {
       if (data.status === 200) {
@@ -35,11 +52,12 @@ const Todolist = () => {
       }
     });
   };
-
+  //completed
   const handleDone = (id) => {
     Getaxios.patch(`todos/${id}`, { isCompleted: true });
     getTodolist();
   };
+  //editing the function
   const handleEdit = (id, currentContent) => {
     setEditingTask(id);
     setEditedTaskContent(currentContent);
@@ -62,6 +80,7 @@ const Todolist = () => {
       handleSaveEdit(id);
     }
   };
+  //adding todo
   const addTask = async (e) => {
     e.preventDefault();
     try {
@@ -75,6 +94,7 @@ const Todolist = () => {
     }
     setTaskName("");
   };
+
   useEffect(() => {
     getTodos(search);
   }, [search]);
@@ -93,9 +113,9 @@ const Todolist = () => {
         <button className="addtask-btn">Add Task</button>
       </form>
       <div className="lists">
-        {todos?.map((todo, id) => (
+        {todos?.map((todo) => (
           <div
-            key={id}
+            key={todo.id}
             className={`list ${todo.isCompleted ? "completed" : ""}`}
           >
             {editingTask === todo.id ? ( // Check if the task is being edited
@@ -141,7 +161,6 @@ const Todolist = () => {
         ))}
         {!todos?.length && <h1>No Tasks</h1>}
         {todos.length > 0 && <p>you have {todos.length} task </p>}
-        
       </div>
     </div>
   );
