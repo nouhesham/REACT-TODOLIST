@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Getaxios } from "../config/axios.config";
 
+const debounceDelay = 1000;
 const Todolist = () => {
   const authToken = "234455kalsk";
   localStorage.setItem("token", authToken);
@@ -18,15 +19,11 @@ const Todolist = () => {
   const handleChange = (e) => {
     setTaskName(e.target.value);
   };
-
   //search function with delay
-  const debounceDelay = 1000;
   let debounceTimer;
   const handleDebouncedSearch = (searchTerm) => {
-    // Clear the previous timer to prevent immediate requests
     clearTimeout(debounceTimer);
 
-    // Set a new timer to delay the request
     debounceTimer = setTimeout(() => {
       getTodos(searchTerm);
     }, debounceDelay);
@@ -36,6 +33,7 @@ const Todolist = () => {
     setSearchTerm(searchterm);
     handleDebouncedSearch(searchterm);
   };
+
   //gettodos function
   const getTodos = async (search) => {
     try {
